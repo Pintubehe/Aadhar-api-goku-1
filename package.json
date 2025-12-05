@@ -1,0 +1,19 @@
+{
+  "name": "goku-aadhaar-api",
+  "version": "1.0.0",
+  "description": "Aadhaar API Proxy by GOKU",
+  "main": "api/index.js",
+  "scripts": {
+    "start": "node api/index.js",
+    "dev": "vercel dev"
+  },
+  "dependencies": {
+    "node-fetch": "^3.3.2"
+  },
+  "engines": {
+    "node": "18.x"
+  },
+  "keywords": ["api", "proxy", "aadhaar"],
+  "author": "goku",
+  "license": "MIT"
+}
