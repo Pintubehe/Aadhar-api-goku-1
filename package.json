@@ -1,6 +1,6 @@
 {
   "name": "aadhaar-proxy-goku",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Aadhaar API Proxy by GOKU",
   "main": "api/index.js",
   "scripts": {
@@ -11,9 +11,13 @@
     "node-fetch": "^3.3.2"
   },
   "engines": {
-    "node": ">=20.0.0"  // यह line CHANGE करें
+    "node": ">=20.0.0"
   },
-  "keywords": ["api", "proxy", "aadhaar"],
+  "keywords": [
+    "api",
+    "proxy",
+    "aadhaar"
+  ],
   "author": "goku",
   "license": "MIT"
 }
