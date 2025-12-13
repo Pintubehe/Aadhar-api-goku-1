@@ -1,6 +1,6 @@
 // ==================== CONFIG =====================
 const YOUR_API_KEYS = ["GOKU"]; // tumhara private key
-const TARGET_API_BASE = "https://niloy-api.vercel.app/api"; // new Aadhaar API
+const TARGET_API_BASE = "https://suryansh.site/adhaar-info/api.php"; // new Aadhaar API
 const CACHE_TIME = 3600 * 1000; // 1 hour in ms
 // =================================================
 
@@ -18,7 +18,10 @@ module.exports = async (req, res) => {
 
   // Param check
   if (!rawAadhaar || !rawKey) {
-    return res.status(400).json({ error: "missing parameters: aadhaar or key" });
+    return res.status(400).json({ 
+      error: "missing parameters: aadhaar or key",
+      usage: "?aadhaar=YOUR_AADHAAR_NUMBER&key=GOKU"
+    });
   }
 
   // Sanitise
@@ -34,7 +37,7 @@ module.exports = async (req, res) => {
   if (!/^\d{12}$/.test(aadhaar)) {
     return res.status(400).json({ 
       error: "invalid aadhaar format",
-      details: "Aadhaar number must be 12 digits"
+      details: "Aadhaar number must be exactly 12 digits"
     });
   }
 
@@ -47,18 +50,19 @@ module.exports = async (req, res) => {
     return res.status(200).send(cached.response);
   }
 
-  // Upstream URL: niloy-api
+  // Upstream URL: suryansh.site Aadhaar API
   const url = TARGET_API_BASE + 
-    "?key=Niloy&aadhaar=" + 
+    "?key=suryansh&aadhaar=" + 
     encodeURIComponent(aadhaar);
 
   try {
     const upstream = await fetch(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'Accept': 'application/json'
+        'Accept': 'application/json',
+        'Referer': 'https://suryansh.site/'
       },
-      timeout: 10000
+      timeout: 15000
     });
 
     const raw = await upstream.text().catch(() => "");
@@ -67,7 +71,8 @@ module.exports = async (req, res) => {
       return res.status(502).json({
         error: "upstream API failed",
         status: upstream.status,
-        aadhaar: aadhaar
+        statusText: upstream.statusText,
+        aadhaar_query: aadhaar
       });
     }
 
@@ -83,17 +88,19 @@ module.exports = async (req, res) => {
       data.powered_by = "goku Aadhaar API";
       data.query_aadhaar = aadhaar;
       data.timestamp = new Date().toISOString();
+      data.cached = false; // This is a fresh response
 
       responseBody = JSON.stringify(data);
-    } catch {
-      // Agar JSON nahi mila to raw hi pass-through
+    } catch (e) {
+      // Agar JSON nahi mila to raw hi pass-through with enhancement
       const enhancedData = {
-        raw_data: raw,
+        raw_response: raw,
         developer: "@gokuuuu_1",
         credit_by: "goku",
         powered_by: "goku Aadhaar API",
         query_aadhaar: aadhaar,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        note: "Original response was not valid JSON"
       };
       responseBody = JSON.stringify(enhancedData);
     }
@@ -105,13 +112,16 @@ module.exports = async (req, res) => {
     });
 
     res.setHeader("X-Proxy-Cache", "MISS");
+    res.setHeader("X-Aadhaar-API-Source", "suryansh.site");
     return res.status(200).send(responseBody);
   } catch (err) {
+    console.error("Aadhaar API Error:", err.message);
     return res.status(502).json({
       error: "upstream request error",
       details: err.message || "unknown error",
       aadhaar: aadhaar,
-      developer: "@gokuuuu_1"
+      developer: "@gokuuuu_1",
+      timestamp: new Date().toISOString()
     });
   }
 };
